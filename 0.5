@@ -1,0 +1,86 @@
+import pygame
+import random
+
+CZARNY = (50,150,250)
+GREEN = (225,225,10)
+pygame.init()
+ekran = pygame.display.set_mode([600,600])
+mysz_w_dol = False
+dalej = True
+
+licznik = pygame.time.Clock()
+rys = pygame.image.load('Star.png')
+rysRatio =rys.get_height()/rys.get_width()
+
+kolor_kluczowy = rys.get_at((0,0))
+rys.set_colorkey(kolor_kluczowy)
+lista_duszkow = pygame.sprite.Group()
+
+font = pygame.font.SysFont("freesansbold",48)
+tekst  = font.render('Visible 0. Canceled 0', True, GREEN)
+
+canceled = 0
+visible = 0
+
+class Buzka(pygame.sprite.Sprite):
+  pos = (0,0)
+  xvel =1
+  yvel =1
+  scale = 100
+  
+  def __init__(self,pos,xvel,yvel):
+    pygame.sprite.Sprite.__init__(self)
+    self.image = rys
+    self.scale = random.randrange(60,120)
+    self.image= pygame.transform.scale(self.image,(self.scale,int(self.scale*rysRatio)))
+    self.rect = self.image.get_rect()
+    self.pos= pos
+    self.rect.x = pos[0] - self.scale/2
+    self.rect.y = pos[1] - self.scale/2
+    self.xvel = xvel
+    self.yvel = yvel
+    
+  def update (self):
+    self.rect.x += self.xvel
+    self.rect.y += self.yvel
+    if self.rect.x <=0 or self.rect.x > ekran.get_width() - self.scale:
+      self.xvel =-self.xvel
+    if self.rect.y <=0 or self.rect.y > ekran.get_height() - self.scale:
+      self.yvel = -self.yvel
+    
+while dalej:
+   ekran.blit(tekst,(0,0))
+   for event in pygame.event.get():
+     if event.type == pygame.QUIT:
+       dalej = False
+     if event.type == pygame.MOUSEBUTTONDOWN:
+         if pygame.mouse.get_pressed()[0]:
+             mysz_w_dol = True
+         elif pygame.mouse.get_pressed()[2]:
+             pos = pygame.mouse.get_pos()
+             klikniete_buzki =[s for s in lista_duszkow
+                                if s.rect.collidepoint(pos)]
+             canceled += len(klikniete_buzki)
+             visible -= len(klikniete_buzki)
+             lista_duszkow.remove(klikniete_buzki)
+     if event.type == pygame. MOUSEBUTTONUP:
+       mysz_w_dol = False
+  
+   ekran.blit(tekst,(0,0))     
+   ekran.fill(CZARNY)
+   lista_duszkow.update()
+   lista_duszkow.draw(ekran)
+   licznik.tick(20)
+   pygame.display.update()
+   if mysz_w_dol:
+     szybkosc_x = random.randint(-5,5)
+     szybkosc_y = random.randint(-5,5)
+     nowaBuzka = Buzka(pygame.mouse.get_pos(),szybkosc_x,szybkosc_y)
+     lista_duszkow.add(nowaBuzka)
+     visible = len(lista_duszkow)
+   tekst_content = 'Visible '+str(visible)+'. Cancelled '+str(canceled)
+   tekst  = font.render(tekst_content, True, GREEN)
+   ekran.blit(tekst,(0,0))
+   pygame.display.flip()
+    
+pygame.quit()
